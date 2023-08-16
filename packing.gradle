@@ -9,6 +9,7 @@ configurations {
     azure.extendsFrom defaultCfg
     legacy.extendsFrom defaultCfg
     tower.extendsFrom defaultCfg
+    hello.extendsFrom defaultCfg
 }
 
 dependencies {
@@ -26,6 +27,7 @@ dependencies {
     amazon  project(':plugins:nf-amazon')
     azure   project(':plugins:nf-azure')
     tower   project(':plugins:nf-tower')
+    hello   project(':plugins:nf-hello')
 }
 
 
@@ -134,7 +136,7 @@ task packAll(type: Jar) {
     archiveName = "nextflow-${version}-all.jar"
 
     from jar // embed our application jar
-    from (configurations.amazon + configurations.google + configurations.tower)
+    from (configurations.amazon + configurations.google + configurations.tower + configurations.hello)
     from (configurations.capsule.collect { zipTree(it) })
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     
