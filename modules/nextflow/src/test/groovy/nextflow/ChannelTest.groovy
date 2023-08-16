@@ -42,6 +42,8 @@ class ChannelTest extends Specification {
     }
 
     def 'should create a channel of values' () {
+
+
         given:
         DataflowQueue result
 

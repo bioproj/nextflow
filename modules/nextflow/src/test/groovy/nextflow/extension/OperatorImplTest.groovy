@@ -142,9 +142,9 @@ class OperatorImplTest extends Specification {
         int next=0
         int error=0
         int complete=0
-        Channel
+        def a = Channel
                 .from( 2,1,0,3,3 )
-                .subscribe onNext: { println it/it; next++ }, onError: { error++ }, onComplete: { complete++ }
+        a.subscribe onNext: { println it/it; next++ }, onError: { error++ }, onComplete: { complete++ }
         sleep 100
 
         then:

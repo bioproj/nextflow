@@ -40,7 +40,7 @@ import org.codehaus.groovy.control.customizers.ASTTransformationCustomizer
  *
  * @author Paolo Di Tommaso <paolo.ditommaso@gmail.com>
  */
-@Slf4j
+//@Slf4j
 class Nextflow extends Console {
 
     static public final TITLE = 'Nextflow REPL console'

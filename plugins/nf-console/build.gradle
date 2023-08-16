@@ -42,7 +42,7 @@ dependencies {
     api("org.codehaus.groovy:groovy-swing:3.0.13")  { transitive=false }
 
     testImplementation project(':nextflow')
-    testImplementation "org.codehaus.groovy:groovy:3.0.13"
-    testImplementation "org.codehaus.groovy:groovy-nio:3.0.13"
+    api "org.codehaus.groovy:groovy:3.0.13"
+    api 'org.codehaus.groovy:groovy-nio:3.0.16'
 }
 

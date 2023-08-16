@@ -62,6 +62,8 @@ class RepositoryFactory implements ExtensionPoint {
 
             case 'gitea':
                 return new GiteaRepositoryProvider(project, config)
+            case 'gitee':
+                return new GiteeRepositoryProvider(project, config)
 
             case 'azurerepos':
                 return new AzureRepositoryProvider(project, config)
