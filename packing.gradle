@@ -10,6 +10,7 @@ configurations {
     legacy.extendsFrom defaultCfg
     tower.extendsFrom defaultCfg
     hello.extendsFrom defaultCfg
+//    sqldb.extendsFrom defaultCfg
 }
 
 dependencies {
@@ -28,6 +29,7 @@ dependencies {
     azure   project(':plugins:nf-azure')
     tower   project(':plugins:nf-tower')
     hello   project(':plugins:nf-hello')
+//    sqldb   project(':plugins:nf-sqldb')
 }
 
 
@@ -136,7 +138,7 @@ task packAll(type: Jar) {
     archiveName = "nextflow-${version}-all.jar"
 
     from jar // embed our application jar
-    from (configurations.amazon + configurations.google + configurations.tower + configurations.hello)
+    from (configurations.amazon + configurations.google + configurations.tower + configurations.hello + configurations.console )
     from (configurations.capsule.collect { zipTree(it) })
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     

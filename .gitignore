@@ -39,3 +39,4 @@ plugins-prod
 sandbox
 wave-tests
 lib/
+output/

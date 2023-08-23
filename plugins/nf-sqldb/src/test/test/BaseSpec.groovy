@@ -1,5 +1,5 @@
 /*
- * Copyright 2021, Seqera Labs
+ * Copyright 2020-2022, Seqera Labs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,25 +12,30 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
 
-package nextflow.hello
+package test
 
-import groovy.transform.CompileStatic
-import nextflow.plugin.BasePlugin
-import nextflow.plugin.Scoped
-import org.pf4j.PluginWrapper
+import spock.lang.Specification
+
+import groovy.util.logging.Slf4j
 
 /**
- * Implements the Hello plugins entry point
+ * Base specification class - It wraps each test into begin-close "test name" strigs
  *
  * @author Paolo Di Tommaso <paolo.ditommaso@gmail.com>
  */
-@CompileStatic
-class HelloPlugin extends BasePlugin {
+@Slf4j
+class BaseSpec extends Specification {
 
-    HelloPlugin(PluginWrapper wrapper) {
-        super(wrapper)
+    def setup() {
+        log.info "TEST BEGIN [${specificationContext.currentIteration.name}]"
     }
+
+    def cleanup() {
+        log.info "TEST CLOSE [${specificationContext.currentIteration.name}]"
+    }
+
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021, Seqera Labs
+ * Copyright 2020-2022, Seqera Labs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,25 +12,22 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
 
-package nextflow.hello
+package nextflow.sql
 
-import groovy.transform.CompileStatic
 import nextflow.plugin.BasePlugin
-import nextflow.plugin.Scoped
 import org.pf4j.PluginWrapper
 
 /**
- * Implements the Hello plugins entry point
+ * Implements SQL plugin for Nextflow
  *
  * @author Paolo Di Tommaso <paolo.ditommaso@gmail.com>
  */
-@CompileStatic
-class HelloPlugin extends BasePlugin {
+class SqlPlugin extends BasePlugin {
 
-    HelloPlugin(PluginWrapper wrapper) {
+    SqlPlugin(PluginWrapper wrapper) {
         super(wrapper)
     }
-
 }

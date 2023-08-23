@@ -96,6 +96,21 @@ class SraExplorer {
         if( opts.protocol )
             protocol = opts.protocol as String
     }
+    DataflowWriteChannel apply1() {
+        if( target == null )
+            target = new DataflowQueue()
+
+        if( !apiKey )
+            apiKey = getConfigApiKey()
+
+        query0(query)
+
+        if( missing )
+            log.warn "Failed to retrieve fastq download URL for accessions: ${missing.join(',')}"
+
+//        target.bind(Channel.STOP)
+        return target
+    }
 
     DataflowWriteChannel apply() {
         if( target == null )
@@ -302,6 +317,7 @@ class SraExplorer {
         def result = new ArrayList(files.size())
         for( def str : files ) {
             result.add( FileHelper.asPath("$protocol://$str") )
+//            FileHelper.asPath("$protocol://$str").fileName
         }
 
         return result.size()==1 ? result[0] : result

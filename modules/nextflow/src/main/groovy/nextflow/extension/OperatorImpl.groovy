@@ -17,6 +17,15 @@
 
 package nextflow.extension
 
+import groovyx.gpars.dataflow.DataflowQueue
+import nextflow.dag.NodeMarker
+import nextflow.datasource.SraExplorer
+import nextflow.sql.InsertHandler
+import nextflow.sql.UpdateHandler
+import nextflow.sql.config.SqlConfig
+import nextflow.sql.config.SqlDataSource
+import nextflow.util.CheckHelper
+
 import static nextflow.extension.DataflowHelper.*
 import static nextflow.splitter.SplitterFactory.*
 import static nextflow.util.CheckHelper.*
@@ -1229,5 +1238,118 @@ class OperatorImpl {
                 .apply()
                 .getOutput()
     }
+
+
+    private static final Map INSERT_PARAMS = [
+            db: CharSequence,
+            into: CharSequence,
+            columns: [CharSequence, List],
+            statement: CharSequence,
+            batch: Integer, // deprecated
+            batchSize: Integer,
+            setup: CharSequence
+    ]
+
+    protected SqlDataSource dataSourceFromOpts(Map opts) {
+        SqlConfig config =  new SqlConfig((Map) session.config.navigate('sql.db'))
+        final dsName = (opts?.db ?: 'default') as String
+        final dataSource = config.getDataSource(dsName)
+        if( dataSource==null ) {
+            def msg = "Unknown db name: $dsName"
+            def choices = config.getDataSourceNames().closest(dsName) ?: config.getDataSourceNames()
+            if( choices?.size() == 1 )
+                msg += " - Did you mean: ${choices.get(0)}?"
+            else if( choices )
+                msg += " - Did you mean any of these?\n" + choices.collect { "  $it"}.join('\n') + '\n'
+            throw new IllegalArgumentException(msg)
+        }
+        return dataSource
+    }
+    DataflowWriteChannel sqlInsert( DataflowReadChannel source, Map opts=null ) {
+        CheckHelper.checkParams('sqlInsert', opts, INSERT_PARAMS)
+        final dataSource = dataSourceFromOpts(opts)
+        final target = CH.createBy(source)
+        final singleton = target instanceof DataflowExpression
+        final insert = new InsertHandler(dataSource, opts)
+
+        final next = { it ->
+            insert.perform(it)
+            target.bind(it)
+        }
+
+        final done = {
+            insert.close()
+            if( !singleton ) target.bind(Channel.STOP)
+        }
+
+        DataflowHelper.subscribeImpl(source, [onNext: next, onComplete: done])
+        return target
+    }
+
+    private static final Map UPDATE_PARAMS = [
+            db: CharSequence,
+            into: CharSequence,
+            columns: [CharSequence, List],
+            statement: CharSequence,
+            batch: Integer, // deprecated
+            batchSize: Integer,
+            setup: CharSequence,
+            where:CharSequence,
+//            value:CharSequence
+    ]
+    DataflowWriteChannel sqlUpdate( DataflowReadChannel source, Map opts=null ) {
+        CheckHelper.checkParams('sqlUpdate', opts, UPDATE_PARAMS)
+        final dataSource = dataSourceFromOpts(opts)
+        final target = CH.createBy(source)
+        final singleton = target instanceof DataflowExpression
+        final update = new UpdateHandler(dataSource, opts)
+
+        final next = { it ->
+            update.perform(it)
+            target.bind(it)
+        }
+
+        final done = {
+            update.close()
+            if( !singleton ) target.bind(Channel.STOP)
+        }
+
+        DataflowHelper.subscribeImpl(source, [onNext: next, onComplete: done])
+        return target
+    }
+
+    DataflowWriteChannel fromSRA(DataflowReadChannel source) {
+        fromSRA( source,Collections.emptyMap() )
+    }
+    DataflowWriteChannel fromSRA(DataflowReadChannel source, Map opts) {
+        CheckHelper.checkParams('fromSRA', opts, SraExplorer.PARAMS)
+        final target = CH.createBy(source)
+//        def target = new DataflowQueue()
+        def explorer = new SraExplorer(target, opts)
+        final singleton = target instanceof DataflowExpression
+
+
+//        if( NF.isDsl2() ) {
+//            session.addIgniter { fetchSraFiles0(explorer) }
+//        }
+//        else {
+//            fetchSraFiles0(explorer)
+//        }
+
+        final next = { it ->
+            explorer.setQuery(it).apply1()
+//            target.bind(it)
+        }
+
+        final done = {
+//            update.close()
+            if( !singleton ) target.bind(Channel.STOP)
+        }
+
+//        NodeMarker.addSourceNode('Channel.fromSRA', target)
+        DataflowHelper.subscribeImpl(source, [onNext: next, onComplete: done])
+        return target
+    }
+
 
 }

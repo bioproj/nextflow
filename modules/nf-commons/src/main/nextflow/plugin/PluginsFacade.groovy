@@ -17,6 +17,8 @@
 
 package nextflow.plugin
 
+import org.pf4j.PluginWrapper
+
 import java.nio.file.Path
 import java.nio.file.Paths
 
@@ -335,6 +337,8 @@ class PluginsFacade implements PluginStateListener {
     }
 
     boolean isStarted(String pluginId) {
+//        for (def item:manager.plugins){
+//        }
         manager.getPlugin(pluginId)?.pluginState == PluginState.STARTED
     }
 

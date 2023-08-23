@@ -17,6 +17,14 @@
 
 package nextflow
 
+import nextflow.events.kafa.KafkaConfig
+import nextflow.events.kafa.TopicHandler
+import nextflow.plugin.extension.Factory
+import nextflow.sql.ChannelSqlExtension
+import nextflow.sql.QueryHandler
+import nextflow.sql.config.SqlConfig
+import nextflow.sql.config.SqlDataSource
+
 import static nextflow.util.CheckHelper.*
 
 import java.nio.file.FileSystem
@@ -69,7 +77,10 @@ class Channel  {
     // only for testing purpose !
     private static CompletableFuture fromPath0Future
 
+
     static private Session getSession() { Global.session as Session }
+
+
 
     /**
      * Allow the dynamic loading of plugin provided channel extension methods
@@ -605,6 +616,23 @@ class Channel  {
         fromSRA( Collections.emptyMap(), query )
     }
 
+    static DataflowWriteChannel fromSRA0(Map opts, query) {
+        CheckHelper.checkParams('fromSRA', opts, SraExplorer.PARAMS)
+
+        def target = new DataflowQueue()
+        def explorer = new SraExplorer(target, opts).setQuery(query)
+        explorer.apply()
+//        if( NF.isDsl2() ) {
+//            session.addIgniter { fetchSraFiles0(explorer) }
+//        }
+//        else {
+//            fetchSraFiles0(explorer)
+//        }
+//
+//        NodeMarker.addSourceNode('Channel.fromSRA', target)
+        return target
+    }
+
     static DataflowWriteChannel fromSRA(Map opts, query) {
         CheckHelper.checkParams('fromSRA', opts, SraExplorer.PARAMS)
 
@@ -626,4 +654,99 @@ class Channel  {
         fromPath0Future = future.exceptionally(Channel.&handlerException)
     }
 
+
+
+    private static final Map QUERY_PARAMS = [
+            db: CharSequence,
+            emitColumns: Boolean,
+            batchSize: Integer,
+            batchDelay: Integer
+    ]
+    static DataflowWriteChannel fromQuery(Map opts, String query) {
+        CheckHelper.checkParams('fromQuery', opts, QUERY_PARAMS)
+//        def target = new DataflowQueue()
+        return queryToChannel(query, opts)
+//        return target
+    }
+
+
+
+    static DataflowWriteChannel of2(Object ... items) {
+        final result = CH.create()
+        final values = new ArrayList()
+        if( items == null ) {
+            values.add(null)
+        }
+        else {
+            for( int i=0; i<items.size(); i++ )
+                addToList0(values, items[i])
+        }
+        values.add(STOP)
+        CH.emitValues(result, values)
+        NodeMarker.addSourceNode('Channel.of2', result)
+        return result
+    }
+
+    static DataflowWriteChannel queryToChannel(String query, Map opts) {
+        final channel = CH.create()
+        final dataSource = dataSourceFromOpts(opts)
+        final handler = new QueryHandler()
+                .withDataSource(dataSource)
+                .withStatement(query)
+                .withTarget(channel)
+                .withOpts(opts)
+        if(NF.dsl2) {
+            session.addIgniter {-> handler.perform(true) }
+        }
+        else {
+            handler.perform(true)
+        }
+        return channel
+    }
+
+    static SqlDataSource dataSourceFromOpts(Map opts) {
+        SqlConfig config =  new SqlConfig((Map) session.config.navigate('sql.db'))
+
+        final dsName = (opts?.db ?: 'default') as String
+        final dataSource = config.getDataSource(dsName)
+        if( dataSource==null ) {
+            def msg = "Unknown db name: $dsName"
+            def choices = config.getDataSourceNames().closest(dsName) ?: config.getDataSourceNames()
+            if( choices?.size() == 1 )
+                msg += " - Did you mean: ${choices.get(0)}?"
+            else if( choices )
+                msg += " - Did you mean any of these?\n" + choices.collect { "  $it"}.join('\n') + '\n'
+            throw new IllegalArgumentException(msg)
+        }
+        return dataSource
+    }
+
+
+    static DataflowWriteChannel fromTopic(String topic, java.time.Duration duration=java.time.Duration.ofSeconds(1)) {
+        topicToChannel(topic, duration, false)
+    }
+
+    static DataflowWriteChannel watchTopic(String topic, java.time.Duration duration=java.time.Duration.ofSeconds(1)) {
+        topicToChannel(topic, duration, true)
+    }
+    private static DataflowWriteChannel topicToChannel(String topic, java.time.Duration duration, boolean listening){
+        KafkaConfig config = new KafkaConfig( session.config.navigate('kafka') as Map)
+        final channel = CH.create()
+
+        final handler = new TopicHandler()
+                .withSession(this.session)
+                .withUrl(config.url)
+                .withGroup(config.group)
+                .withTopic(topic)
+                .withListening(listening)
+                .withTarget(channel)
+                .withDuration(duration)
+        if(NF.dsl2) {
+            session.addIgniter {-> handler.perform() }
+        }
+        else {
+            handler.perform()
+        }
+        return channel
+    }
 }
