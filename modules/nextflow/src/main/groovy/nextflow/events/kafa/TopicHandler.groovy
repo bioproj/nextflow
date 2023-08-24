@@ -109,7 +109,8 @@ class TopicHandler {
         try {
             final records = consumer.poll(duration)
             records.each {
-                target << [ it.key(), it.value()]
+                def values = it.value().split(",").toList()
+                target << [ it.key(), values]
             }
         }catch(Exception e){
             log.error "Exception reading kafka topic $topic",e
