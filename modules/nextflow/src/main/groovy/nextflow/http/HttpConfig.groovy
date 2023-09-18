@@ -9,20 +9,21 @@ import groovy.transform.ToString
 @CompileStatic
 class HttpConfig {
 
-    private String url
-    private String group
+    private String urlId
+    private String urlName
+
 
     HttpConfig(Map map){
         def config = map ?: Collections.emptyMap()
-        url = config.url
-        group = config.group
+        urlId = config.urlId
+        urlName = config.urlName
     }
 
-    String getUrl(){
-        url
+    String getUrlId() {
+        return urlId
     }
 
-    String getGroup(){
-        group
+    String getUrlName() {
+        return urlName
     }
 }

@@ -760,8 +760,13 @@ class Channel  {
 
 
     private static final Map OFTWEETS_PARAMS = [
-            excludeRetweets: Boolean,
+            project: String,
+            valid: Boolean
     ]
+
+    static DataflowWriteChannel ofTweets(String query) {
+        ofTweets(Collections.emptyMap(), query)
+    }
 
     static DataflowWriteChannel ofTweets(Map opts, String query) {
         CheckHelper.checkParams('ofTweets', opts, OFTWEETS_PARAMS)
@@ -781,7 +786,11 @@ class Channel  {
 
     protected static void emitTweets(DataflowWriteChannel channel, String query, Map opts) {
         HttpConfig config = new HttpConfig( session.config.navigate('http') as Map)
-
+        String project = opts.project
+        Boolean valid = opts.valid
+        if(valid==null){
+            valid =true
+        }
 //        def end_time = new Date().getTime()
 //        def start_time = end_time - (24 * 60 * 60 * 1000)
 //        def exclude_retweets=opts.excludeRetweets
@@ -799,7 +808,16 @@ class Channel  {
 //                        "&tweet.fields=created_at,author_id" +\
 //                        "&max_results=${max_results}"
 //        String url ="http://192.168.10.20:20000/platform/seq-sample/list/2?valid=true";
-        URL obj = new URL(config.url);
+        String url;
+        if(project!=null && project.equals("name")){
+            url = config.urlName+"/"+query
+        }else {
+            url = config.urlId +"/"+query
+        }
+        if(valid){
+            url = url + "?valid=true"
+        }
+        URL obj = new URL(url);
         HttpURLConnection con = (HttpURLConnection) obj.openConnection();
 
         con.setRequestMethod("GET");
