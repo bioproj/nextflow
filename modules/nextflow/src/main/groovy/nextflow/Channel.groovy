@@ -17,13 +17,18 @@
 
 package nextflow
 
+import groovy.json.*;
 import nextflow.events.kafa.KafkaConfig
 import nextflow.events.kafa.TopicHandler
+import nextflow.http.HttpConfig
 import nextflow.plugin.extension.Factory
 import nextflow.sql.ChannelSqlExtension
 import nextflow.sql.QueryHandler
 import nextflow.sql.config.SqlConfig
 import nextflow.sql.config.SqlDataSource
+import org.apache.kafka.common.protocol.types.Field
+
+import java.text.SimpleDateFormat
 
 import static nextflow.util.CheckHelper.*
 
@@ -61,6 +66,7 @@ import nextflow.util.CheckHelper
 import nextflow.util.Duration
 import org.codehaus.groovy.runtime.InvokerHelper
 import org.codehaus.groovy.runtime.NullObject
+
 /**
  * Channel factory object
  *
@@ -748,5 +754,99 @@ class Channel  {
             handler.perform()
         }
         return channel
+    }
+
+
+
+
+    private static final Map OFTWEETS_PARAMS = [
+            excludeRetweets: Boolean,
+    ]
+
+    static DataflowWriteChannel ofTweets(Map opts, String query) {
+        CheckHelper.checkParams('ofTweets', opts, OFTWEETS_PARAMS)
+        return QueryOfTweets(opts, query)
+    }
+
+    private static DataflowWriteChannel QueryOfTweets(Map opts, String query) {
+        // The location of the bearer token file, env var or whatever should
+        // be set in the `nextflow.config` file. For now, let's do it the easy
+        // way here.
+//        String bearerToken = new File("twitter_bearer_token").text.strip()
+        CheckHelper.checkParams('ofTweets', opts, OFTWEETS_PARAMS)
+        final channel = CH.create()
+        session.addIgniter(it -> emitTweets(channel, query, opts) )
+        return channel
+    }
+
+    protected static void emitTweets(DataflowWriteChannel channel, String query, Map opts) {
+        HttpConfig config = new HttpConfig( session.config.navigate('http') as Map)
+
+//        def end_time = new Date().getTime()
+//        def start_time = end_time - (24 * 60 * 60 * 1000)
+//        def exclude_retweets=opts.excludeRetweets
+//        def max_results=20
+//        // Formating dates adequately
+//        String start_time_str = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(start_time);
+//        String end_time_str = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(end_time);
+//        // Formating query adequately
+//        def query_string = query.replace(' ', '%20')
+//        def optional_query = exclude_retweets ? '%20-is:retweet' : ''
+//        String url = "https://api.twitter.com/2/tweets/search/recent?query=" +\
+//                        query_string + optional_query +\
+//                        "&start_time=${start_time_str}" +\
+//                        "&end_time=${end_time_str}" +\
+//                        "&tweet.fields=created_at,author_id" +\
+//                        "&max_results=${max_results}"
+//        String url ="http://192.168.10.20:20000/platform/seq-sample/list/2?valid=true";
+        URL obj = new URL(config.url);
+        HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+
+        con.setRequestMethod("GET");
+//        con.setRequestProperty("Authorization", "Bearer " + bearerToken);
+
+        BufferedReader inSteam = new BufferedReader(new InputStreamReader(con.getInputStream()));
+        String inputLine;
+        StringBuffer response = new StringBuffer();
+
+        while ((inputLine = inSteam.readLine()) != null) {
+            response.append(inputLine);
+        }
+        inSteam.close();
+
+        List list_of_tweets = []
+
+        def json = new JsonSlurper().parseText(response.toString())
+        json['data'].each(it->{
+            channel.bind([it['name'], [it['fastq1'], it['fastq2']]])
+//            list_of_tweets.add()
+        })
+//        list_of_tweets.add(["key":"value1"])
+//        println json
+//        json.each { tweet ->
+//            String url2 = "https://api.twitter.com/2/users?ids=${tweet.author_id}"
+//            URL obj2 = new URL(url2);
+//            HttpURLConnection con2 = (HttpURLConnection) obj2.openConnection();
+//            con2.setRequestMethod("GET");
+//            con2.setRequestProperty("Authorization", "Bearer " + bearerToken);
+//            BufferedReader in2 = new BufferedReader(new InputStreamReader(con2.getInputStream()));
+//            String inputLine2;
+//            StringBuffer response2 = new StringBuffer();
+//            while ((inputLine2 = in2.readLine()) != null) {
+//                def json2 = new JsonSlurper().parseText(inputLine2.toString())
+//                json2.each { tweet2 ->
+//                    Map<String, String> tweet_map = [:]
+//                    tweet_map.put('created_at', tweet.created_at)
+//                    tweet_map.put('author_id', tweet.author_id)
+//                    tweet_map.put('author_handle', tweet2.username)
+//                    tweet_map.put('tweet_text', tweet.text)
+//                    list_of_tweets.add(tweet_map)
+//                }
+//            }
+//        }
+//        list_of_tweets.each { it ->
+//            channel.bind([it['key'], [it['key'], it['key']]])
+//        }
+        channel.bind(Channel.STOP)
     }
 }
