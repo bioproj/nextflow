@@ -20,6 +20,8 @@ package nextflow.extension
 import groovyx.gpars.dataflow.DataflowQueue
 import nextflow.dag.NodeMarker
 import nextflow.datasource.SraExplorer
+import nextflow.events.kafa.KafkaConfig
+import nextflow.events.kafa.PublisherTopic
 import nextflow.sql.InsertHandler
 import nextflow.sql.UpdateHandler
 import nextflow.sql.config.SqlConfig
@@ -1350,6 +1352,28 @@ class OperatorImpl {
         DataflowHelper.subscribeImpl(source, [onNext: next, onComplete: done])
         return target
     }
+
+
+
+    DataflowWriteChannel publishTopic(DataflowReadChannel source, String topic){
+        KafkaConfig config = new KafkaConfig( session.config.navigate('kafka') as Map)
+
+        final target = CH.createBy(source)
+        final next = {
+            new PublisherTopic()
+                    .withUrl(config.url)
+                    .withGroup(config.group)
+                    .withTopic(topic)
+                    .publishMessage(it)
+            target.bind(it)
+        }
+        final done = {
+            target.bind(Channel.STOP)
+        }
+        DataflowHelper.subscribeImpl(source, [onNext: next, onComplete: done])
+        target
+    }
+
 
 
 }
