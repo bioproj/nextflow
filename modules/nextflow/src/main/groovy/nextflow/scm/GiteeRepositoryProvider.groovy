@@ -54,7 +54,7 @@ class GiteeRepositoryProvider extends RepositoryProvider{
         // see
         // https://try.gitea.io/api/swagger#/repository/repoGetRawFile
         // note: `ref` is undocumented
-        def result = "${config.server}/$project/raw/master/$path"
+        def result = "${config.endpoint}/$project/contents/$path"
         if( revision )
             result += "?ref=$revision"
         return result
@@ -81,9 +81,12 @@ class GiteeRepositoryProvider extends RepositoryProvider{
     /** {@inheritDoc} */
     @Override
     byte[] readBytes(String path) {
-
+//        def url = getContentUrl(path)
+//
+//        def contents = invoke(url)
+//        return contents?.getBytes()
         def url = getContentUrl(path)
-        def contents = invoke(url)
-        return contents?.getBytes()
+        Map response  = invokeAndParseResponse(url)
+        response.get('content')?.toString()?.decodeBase64()
     }
 }

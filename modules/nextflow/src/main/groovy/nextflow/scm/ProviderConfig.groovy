@@ -95,7 +95,7 @@ class ProviderConfig {
             case 'gitee':
                 attr.platform = name
                 if( !attr.server ) attr.server = 'https://gitee.com'
-                if( !attr.endpoint ) attr.endpoint = 'https://gitee.com'
+                if( !attr.endpoint ) attr.endpoint = 'https://gitee.com/api/v5/repos'
                 break
         }
 
