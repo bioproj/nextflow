@@ -17,7 +17,7 @@ class GiteeRepositoryProvider extends RepositoryProvider{
     /** {@inheritDoc} */
     @Override
     String getEndpointUrl() {
-        "${config.endpoint}/${project}"
+        "${config.server}/${project}"
     }
 
     @Override
@@ -54,7 +54,7 @@ class GiteeRepositoryProvider extends RepositoryProvider{
         // see
         // https://try.gitea.io/api/swagger#/repository/repoGetRawFile
         // note: `ref` is undocumented
-        def result = "${config.endpoint}/$project/raw/master/$path"
+        def result = "${config.server}/$project/raw/master/$path"
         if( revision )
             result += "?ref=$revision"
         return result
@@ -63,13 +63,13 @@ class GiteeRepositoryProvider extends RepositoryProvider{
     /** {@inheritDoc} */
     @Override
     String getCloneUrl() {
-        Map response = invokeAndParseResponse( getEndpointUrl() )
+//        Map response = invokeAndParseResponse( getEndpointUrl() )
+//
+//        def result = response.get('clone_url')
+//        if( !result )
+//            throw new IllegalStateException("Missing clone URL for: $project")
 
-        def result = response.get('clone_url')
-        if( !result )
-            throw new IllegalStateException("Missing clone URL for: $project")
-
-        return result
+        return getEndpointUrl()
     }
 
     /** {@inheritDoc} */

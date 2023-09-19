@@ -121,7 +121,6 @@ class AssetManager {
      */
     @PackageScope
     AssetManager build( String pipelineName, Map config = null, HubOptions cliOpts = null ) {
-
         this.providerConfigs = ProviderConfig.createFromMap(config)
 
         this.project = resolveName(pipelineName)
@@ -331,7 +330,7 @@ class AssetManager {
                     result = url.path.stripStart('/')
                 }
             }
-            log.debug "Repository URL: $repository; Project: $result; Hub provider: $hub"
+            log.info "Repository URL: $repository; Project: $result; Hub provider: $hub"
             return result
         }
         catch( IllegalArgumentException e ) {
@@ -380,7 +379,7 @@ class AssetManager {
 
     @Memoized
     String getGitRepositoryUrl() {
-
+        // 判断url是否存在
         if( localPath.exists() ) {
             return localPath.toURI().toString()
         }
@@ -579,13 +578,15 @@ class AssetManager {
         /*
          * if the pipeline already exists locally pull it from the remote repo
          */
+        // 如果流程存在
         if( !localPath.exists() ) {
             localPath.parentFile.mkdirs()
             // make sure it contains a valid repository
+            //检测仓库
             checkValidRemoteRepo(revision)
 
             final cloneURL = getGitRepositoryUrl()
-            log.debug "Pulling $project -- Using remote clone url: ${cloneURL}"
+            log.info "Pulling $project -- Using remote clone url: ${cloneURL}"
 
             // clone it
             def clone = Git.cloneRepository()

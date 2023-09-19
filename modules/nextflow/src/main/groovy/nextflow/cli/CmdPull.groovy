@@ -74,6 +74,7 @@ class CmdPull extends CmdBase implements HubOptions {
         
         list.each {
             log.info "Checking $it ..."
+            // nextflow 拉去代码
             def manager = new AssetManager(it, this)
 
             def result = manager.download(revision)

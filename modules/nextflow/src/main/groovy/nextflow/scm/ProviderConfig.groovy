@@ -92,6 +92,11 @@ class ProviderConfig {
                 if( !attr.server ) attr.server = 'https://dev.azure.com'
                 if( !attr.endpoint ) attr.endpoint = 'https://dev.azure.com'
                 break
+            case 'gitee':
+                attr.platform = name
+                if( !attr.server ) attr.server = 'https://gitee.com'
+                if( !attr.endpoint ) attr.endpoint = 'https://gitee.com'
+                break
         }
 
         if( attr.path )
@@ -347,7 +352,8 @@ class ProviderConfig {
 
         if( !result.find{ it.name == 'azurerepos' })
             result << new ProviderConfig('azurerepos')
-
+        if( !result.find{ it.name == 'gitee' })
+            result << new ProviderConfig('gitee')
     }
 
     protected String resolveProjectName(String path) {
