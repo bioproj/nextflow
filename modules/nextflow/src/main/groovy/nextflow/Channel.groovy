@@ -836,7 +836,7 @@ class Channel  {
 
         def json = new JsonSlurper().parseText(response.toString())
         json['data'].each(it->{
-            channel.bind([it['name'], [it['fastq1'], it['fastq2']]])
+            channel.bind([it['name'],it['species'], [it['fastq1'], it['fastq2']]])
 //            list_of_tweets.add()
         })
 //        list_of_tweets.add(["key":"value1"])
