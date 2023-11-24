@@ -22,6 +22,8 @@ import nextflow.dag.NodeMarker
 import nextflow.datasource.SraExplorer
 import nextflow.events.kafa.KafkaConfig
 import nextflow.events.kafa.PublisherTopic
+import nextflow.http.HttpConfig
+import nextflow.http.SendPost
 import nextflow.sql.InsertHandler
 import nextflow.sql.UpdateHandler
 import nextflow.sql.config.SqlConfig
@@ -1373,7 +1375,23 @@ class OperatorImpl {
         DataflowHelper.subscribeImpl(source, [onNext: next, onComplete: done])
         target
     }
+    DataflowWriteChannel sendPost(DataflowReadChannel source){
+        HttpConfig config = new HttpConfig( session.config.navigate('http') as Map)
 
+        final target = CH.createBy(source)
+
+        final next = {
+            new SendPost()
+                    .withUrl(config.postUrl)
+                    .sendPost(it)
+            target.bind(it)
+        }
+        final done = {
+            target.bind(Channel.STOP)
+        }
+        DataflowHelper.subscribeImpl(source, [onNext: next, onComplete: done])
+        target
+    }
 
 
 }

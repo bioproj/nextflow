@@ -26,8 +26,8 @@ rootProject.children.each { prj ->
 }
 
 include 'plugins'
-//include 'plugins:nf-amazon'
-//include 'plugins:nf-google'
+include 'plugins:nf-amazon'
+include 'plugins:nf-google'
 include 'plugins:nf-ga4gh'
 include 'plugins:nf-tower'
 include 'plugins:nf-console'
@@ -35,7 +35,7 @@ include 'plugins:nf-azure'
 include 'plugins:nf-codecommit'
 include 'plugins:nf-wave'
 include 'plugins:nf-hello'
-//include 'plugins:nf-sqldb'
+include 'plugins:nf-sqldb'
 //include 'plugins:nf-trace'
 findProject(':plugins:nf-trace')?.name = 'nf-trace'
 

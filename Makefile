@@ -95,7 +95,7 @@ upload:
 # Create self-contained distribution package
 #
 pack:
-	BUILD_PACK=1 gradle packAll
+	BUILD_PACK=1 ./gradlew packAll
 
 packCore:
 	BUILD_PACK=1 ./gradlew packCore

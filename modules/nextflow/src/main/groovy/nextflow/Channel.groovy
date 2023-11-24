@@ -812,7 +812,7 @@ class Channel  {
         if(project!=null && project.equals("name")){
             url = config.urlName+"/"+query
         }else {
-            url = config.urlId +"/"+query
+            url = config.sampleId +"/"+query
         }
         if(valid){
             url = url + "?valid=true"
@@ -836,7 +836,7 @@ class Channel  {
 
         def json = new JsonSlurper().parseText(response.toString())
         json['data'].each(it->{
-            channel.bind([it['name'],it['species'], [it['fastq1'], it['fastq2']]])
+            channel.bind([[it['dataKey'],it['species'],it["taskId"]], [it['fastq1'], it['fastq2']]])
 //            list_of_tweets.add()
         })
 //        list_of_tweets.add(["key":"value1"])
