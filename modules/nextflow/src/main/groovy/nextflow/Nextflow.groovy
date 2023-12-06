@@ -388,6 +388,8 @@ class Nextflow {
 
     static void writeMessage(String topic, String message, UUID key=null){
         KafkaConfig  config = new KafkaConfig( Global.session.config.navigate('kafka') as Map)
+        println("config.url:"+config.url)
+        println("config.group:"+config.group)
         new PublisherTopic()
                 .withUrl(config.url)
                 .withGroup(config.group)
