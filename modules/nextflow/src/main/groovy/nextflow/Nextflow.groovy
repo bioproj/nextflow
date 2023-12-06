@@ -17,6 +17,9 @@
 
 package nextflow
 
+import nextflow.events.kafa.KafkaConfig
+import nextflow.events.kafa.PublisherTopic
+
 import java.nio.file.FileSystem
 import java.nio.file.Files
 import java.nio.file.NoSuchFileException
@@ -51,6 +54,7 @@ import static nextflow.file.FileHelper.isGlobAllowed
  */
 class Nextflow {
 
+
     static private Session getSession() { Global.session as Session }
 
     // note: groovy `Slf4j` annotation causes a bizarre issue
@@ -59,6 +63,7 @@ class Nextflow {
     public static final Logger log = LoggerFactory.getLogger(Nextflow)
 
     private static final Random random = new Random()
+
 
     /**
      * Create a {@code DataflowVariable} binding it to the specified value
@@ -375,7 +380,20 @@ class Nextflow {
             .send(params)
 
     }
+    static void sayHello( Map params ) {
+        println 113
+    }
 
+
+
+    static void writeMessage(String topic, String message, UUID key=null){
+        KafkaConfig  config = new KafkaConfig( Global.session.config.navigate('kafka') as Map)
+        new PublisherTopic()
+                .withUrl(config.url)
+                .withGroup(config.group)
+                .withTopic(topic)
+                .publishMessage([key, message])
+    }
     /**
      * Implements built-in send mail functionality
      *
